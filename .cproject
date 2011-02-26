@@ -23,13 +23,20 @@
 							<builder buildPath="${workspace_loc:/HelloEclipse/Default}" id="cdt.managedbuild.target.gnu.builder.macosx.base.1899808044" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.base"/>
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.base.1372902259" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.base"/>
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base.293963466" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base">
-								<option id="macosx.cpp.link.option.paths.606959176" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths"/>
-								<option id="macosx.cpp.link.option.libs.1593998636" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs"/>
+								<option id="macosx.cpp.link.option.paths.606959176" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libs}&quot;"/>
+								</option>
+								<option id="macosx.cpp.link.option.libs.1593998636" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="OpenNI"/>
+									<listOptionValue builtIn="false" value="openNI"/>
+									<listOptionValue builtIn="false" value="NiSampleModule"/>
+								</option>
 								<option id="macosx.cpp.link.option.other.93030701" name="Other options (-Xlinker [option])" superClass="macosx.cpp.link.option.other" valueType="stringList">
 									<listOptionValue builtIn="false" value="/Users/onedayitwillmake/GIT/LIBRARY/Cinder/lib/libcinder_d.a"/>
 								</option>
-								<option id="macosx.cpp.link.option.userobjs.442770415" name="Other objects" superClass="macosx.cpp.link.option.userobjs" valueType="userObjs"/>
+								<option id="macosx.cpp.link.option.userobjs.442770415" name="Other objects" superClass="macosx.cpp.link.option.userobjs"/>
 								<option id="macosx.cpp.link.option.flags.1225849360" name="Linker flags" superClass="macosx.cpp.link.option.flags" value="-arch i386 -framework Cocoa -framework OpenGL -framework Carbon -framework CoreVideo -framework QTKit -framework QuickTime -framework Accelerate -framework AudioToolbox -framework AudioUnit -framework CoreAudio" valueType="string"/>
+								<option id="macosx.cpp.link.option.shared.606778117" name="Shared (-dynamiclib)" superClass="macosx.cpp.link.option.shared" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.804648217" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -44,6 +51,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.522131004" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/Users/onedayitwillmake/GIT/LIBRARY/Cinder/boost"/>
 									<listOptionValue builtIn="false" value="/Users/onedayitwillmake/GIT/LIBRARY/Cinder/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/HelloEclipse/includes}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.960717740" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.other.1735799906" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -arch i386" valueType="string"/>
@@ -55,6 +63,9 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -154,8 +165,8 @@
 						<parser enabled="true"/>
 					</scannerInfoProvider>
 				</profile>
-				<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215;cdt.managedbuild.toolchain.gnu.macosx.base.1873825215.1228186462;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.1876156651;cdt.managedbuild.tool.gnu.cpp.compiler.input.20011343">
-					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+				<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215;cdt.managedbuild.toolchain.gnu.macosx.base.1873825215.1228186462;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.1908464243;cdt.managedbuild.tool.gnu.c.compiler.input.718522749">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 						<buildOutputProvider>
 							<openAction enabled="true" filePath=""/>
@@ -237,8 +248,8 @@
 						</scannerInfoProvider>
 					</profile>
 				</scannerConfigBuildInfo>
-				<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215;cdt.managedbuild.toolchain.gnu.macosx.base.1873825215.1228186462;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.1908464243;cdt.managedbuild.tool.gnu.c.compiler.input.718522749">
-					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+				<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215;cdt.managedbuild.toolchain.gnu.macosx.base.1873825215.1228186462;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.1876156651;cdt.managedbuild.tool.gnu.cpp.compiler.input.20011343">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
 						<buildOutputProvider>
 							<openAction enabled="true" filePath=""/>
