@@ -20,3 +20,10 @@ From what I've used it so far, it is much better - but compile times are a littl
    3. Replace **'/Users/onedayitwillmake/GIT/LIBRARY/Cinder/'** with your own **cinder path**
 6. After hitting, apply/ok and closing that window select Project->Build All and project should build successfully.
 
+
+## Screenshots
+### Debugger / Hitting a breakpoint
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshoteditor.png "Title")
+
+### Better syntax highlighting, and code sense
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshoteditor.png "Title")
