@@ -17,6 +17,7 @@
 // App info
 #define APP_INITIAL_WIDTH 1024.0f
 #define APP_INITIAL_HEIGHT 768.0f
+#define APP_PATH "/Users/onedayitwillmake/GIT/EclipseCinder"
 
 // SHORTHAND
 #define RED 0

@@ -66,17 +66,19 @@ private:
 #define __ENABLE_USE_RECORDING
 void vcApp::prepareSettings( Settings* settings )
 {
-	setWindowSize( APP_INITIAL_WIDTH, APP_INITIAL_HEIGHT );
+	settings->setWindowSize( APP_INITIAL_WIDTH, APP_INITIAL_HEIGHT );
 }
-
 void vcApp::setup()
 {
+	// For now we have to manually change to the application path. Bug?
+	chdir( getAppPath().c_str() );
+
     int     maxPathLenth = 255;
     char    temp[maxPathLenth];
     std::string cwd = ( getcwd(temp, maxPathLenth) ? std::string( temp ) : std::string("") );
 
     std::cout << "CurrentWorkingDirectory is:" << cwd << std::endl;
-
+    std::cout << "AppPath: " << getAppPath() << std::endl;
 	bool useRecording = true;
 
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -86,15 +88,15 @@ void vcApp::setup()
 	skeleton->setup( );
 
 	if(useRecording) {
-		nRetVal = skeleton->mContext.OpenFileRecording("resources/SkeletonRec.oni");
+		nRetVal = skeleton->mContext.OpenFileRecording("/SkeletonRec.oni");
 		// File opened
-		CHECK_RC(nRetVal, "Open File Recording", true);
+		CHECK_RC(nRetVal, "B-Open File Recording", true);
 
 		// Get recording 'player'
 		nRetVal = skeleton->mContext.FindExistingNode(XN_NODE_TYPE_PLAYER, skeleton->mPlayer);
 		CHECK_RC(nRetVal, "Find player generator", true);
 	} else {
-		skeleton->setupFromXML( "resources/configIR.xml" );
+		skeleton->setupFromXML( "../Resources/configIR.xml" );
 	}
 
 	// Output device production nodes (user, depth, etc)
@@ -128,7 +130,7 @@ void vcApp::setup()
 	openNIThread = new OpenNIThreadRunner();
 	openNIThread->go();
 
-	setupGui();
+//	setupGui();
 }
 
 void vcApp::setupGui()
@@ -171,9 +173,11 @@ void vcApp::setupCamera()
 
 	Vec3f p = Vec3f::one() * 2000.0f;// Start off this far away from the center
 	CameraPersp cam = CameraPersp( getWindowWidth(), getWindowHeight(), cameraFOV );
-	cam.setEyePoint( Vec3f::zero() );
+	cam.setWorldUp( ci::Vec3f(0, 1, 0) );
+	cam.setEyePoint( ci::Vec3f(0, 0, 1000 ) );
 	cam.setCenterOfInterestPoint( Vec3f::zero() );
 	cam.setPerspective( cameraFOV, getWindowAspectRatio(), cameraNear, cameraFar );
+	cam.setViewDirection( ci::Vec3f(0, 0, 1 ) );
 
 	// Set mayacamera
 	mMayaCam.setCurrentCam( cam );
@@ -216,6 +220,25 @@ void vcApp::update()
 	skeleton->update();
 }
 
+void vcApp::drawFPS()
+{
+	std::stringstream myString(stringstream::in | stringstream::out);
+	double fpsValue = xnFPSCalc(&CINDERSKELETON->xnFPS);
+	myString << std::setprecision( 3 ) << fpsValue;
+
+	ci::Vec2f position = ci::Vec2f( 10, getWindowSize().y - 15);
+	float	rectGray = 0.05f;
+	float	fontGray = 0.75f;
+
+	gl::color( Color( rectGray, rectGray, rectGray) );
+	gl::drawSolidRect( ci::Rectf( 0, position.y-5, 50, position.y+20 ) );
+	gl::drawString( myString.str(), position, ci::ColorA( fontGray, fontGray, fontGray, 1) );
+}
+
+
+
+
+
 void vcApp::draw()
 {
 	// Clear window
@@ -255,7 +278,7 @@ void vcApp::draw()
 	// Draw a cube at the origin as a visual anchor
 	gl::drawStrokedCube( ci::Vec3f::zero(), ci::Vec3f( 10.0f, 10.0f, 10.0f ) );
 
-	GUI->draw();
+//	GUI->draw();
 }
 
 void vcApp::drawKinectDepth()
@@ -292,23 +315,4 @@ ci::Rectf vcApp::getKinectDepthArea()
 }
 
 #pragma mark Debug
-void vcApp::drawFPS()
-{
-	std::stringstream myString(stringstream::in | stringstream::out);
-	double fpsValue = xnFPSCalc(&CINDERSKELETON->xnFPS);
-	myString << std::setprecision( 3 ) << fpsValue;
-
-	ci::Vec2f position = ci::Vec2f( 10, getWindowSize().y - 15);
-	float	rectGray = 0.05f;
-	float	fontGray = 0.75f;
-
-	gl::color( Color( rectGray, rectGray, rectGray) );
-	gl::drawSolidRect( ci::Rectf( 0, position.y-5, 50, position.y+20 ) );
-	gl::drawString( myString.str(), position, ci::ColorA( fontGray, fontGray, fontGray, 1) );
-}
-
-
-
-
-
 CINDER_APP_BASIC( vcApp, RendererGl )
