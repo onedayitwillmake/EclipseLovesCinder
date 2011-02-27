@@ -86,7 +86,7 @@ void vcApp::setup()
 	skeleton->setup( );
 
 	if(useRecording) {
-		nRetVal = skeleton->mContext.OpenFileRecording("SkeletonRec.oni");
+		nRetVal = skeleton->mContext.OpenFileRecording("resources/SkeletonRec.oni");
 		// File opened
 		CHECK_RC(nRetVal, "Open File Recording", true);
 
@@ -94,7 +94,7 @@ void vcApp::setup()
 		nRetVal = skeleton->mContext.FindExistingNode(XN_NODE_TYPE_PLAYER, skeleton->mPlayer);
 		CHECK_RC(nRetVal, "Find player generator", true);
 	} else {
-		skeleton->setupFromXML( "configIR.xml" );
+		skeleton->setupFromXML( "resources/configIR.xml" );
 	}
 
 	// Output device production nodes (user, depth, etc)
