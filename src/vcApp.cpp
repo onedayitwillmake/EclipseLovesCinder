@@ -78,7 +78,7 @@ void vcApp::setup()
     std::string cwd = ( getcwd(temp, maxPathLenth) ? std::string( temp ) : std::string("") );
 
     std::cout << "CurrentWorkingDirectory is:" << cwd << std::endl;
-    std::cout << "AppPath: " << getAppPath() << std::endl;
+    std::cout << "AppPath: " << this->getAppPath() << std::endl;
 	bool useRecording = true;
 
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -130,7 +130,7 @@ void vcApp::setup()
 	openNIThread = new OpenNIThreadRunner();
 	openNIThread->go();
 
-//	setupGui();
+	setupGui();
 }
 
 void vcApp::setupGui()
@@ -278,7 +278,7 @@ void vcApp::draw()
 	// Draw a cube at the origin as a visual anchor
 	gl::drawStrokedCube( ci::Vec3f::zero(), ci::Vec3f( 10.0f, 10.0f, 10.0f ) );
 
-//	GUI->draw();
+	GUI->draw();
 }
 
 void vcApp::drawKinectDepth()
