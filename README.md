@@ -23,10 +23,10 @@ From what I've used it so far, it is much better - but compile times are a littl
 
 ## Screenshots
 ### Debugger / Hitting a breakpoint
-![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshotdebugger.png "Title")
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/Opennibarebones/docs/github/screenshot_debugger.png "Title")
 
 ### OpenNIStarterKit Block 
-![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshot_openni.png "Title")
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/Opennibarebones/docs/github/screenshot_openni.png "Title")
 
 ### Better syntax highlighting, and code sense
-![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshoteditor.png "Title")
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/Opennibarebones/docs/github/screenshot_editor.png "Title")
