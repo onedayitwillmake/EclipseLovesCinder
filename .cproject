@@ -16,7 +16,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" description="" id="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215" name="Default" parent="org.eclipse.cdt.build.core.emptycfg" postbuildStep="mkdir -p ${BuildArtifactFileName}.app/Contents/MacOS ; mv ${BuildArtifactFileName} ${BuildArtifactFileName}.app/Contents/MacOS/; cp -rf ../Resources ${BuildArtifactFileName}.app/Contents/Resources  ; cp -rf ../Resources/Info.plist ${BuildArtifactFileName}.app/Contents/Info.plist">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" description="" id="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215" name="Default" parent="org.eclipse.cdt.build.core.emptycfg" postbuildStep="python ../tools/postinstall.py -appName=${BuildArtifactFileName} --cwd=${CWD};">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.macosx.base.1873825215.1228186462" name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.base.2126172436" name="cdt.managedbuild.toolchain.gnu.macosx.base" superClass="cdt.managedbuild.toolchain.gnu.macosx.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.MachO64" id="cdt.managedbuild.target.gnu.platform.macosx.base.97162131" name="Debug Platform" osList="macosx" superClass="cdt.managedbuild.target.gnu.platform.macosx.base"/>
