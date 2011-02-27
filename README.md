@@ -15,12 +15,15 @@ From what I've used it so far, it is much better - but compile times are a littl
 2. Download this project
 3. Import into eclipse workspace (select import existing project in the 'general' drop down)  
 4. RightClick project root, select properties
-   1. Select C/C++ Build
-   2. Select Settings
-   3. Go through the drop downlist, and replace '/Users/onedayitwillmake/GIT/LIBRARY/Cinder/' with your own cinder path
-5. Select **C/C++ General**
-   1. Select Paths and Symbols
-   2. Select GNU C++
-   3. Replace references to '/Users/onedayitwillmake/GIT/LIBRARY/Cinder/' with your own cinder/boost path
+   1. Select **C/C++ Build**
+   2. Select **Build Variables**
+   3. Replace **'/Users/onedayitwillmake/GIT/LIBRARY/Cinder/'** with your own **cinder path**
 6. After hitting, apply/ok and closing that window select Project->Build All and project should build successfully.
 
+
+## Screenshots
+### Debugger / Hitting a breakpoint
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshoteditor.png "Title")
+
+### Better syntax highlighting, and code sense
+![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/OpenNIBareBones/docs/github/screenshoteditor.png "Title")
