@@ -1,9 +1,18 @@
+/**
+ * EclipseLovesCinder example application
+ * When debugging, if you change your project name go into debug configurations (arrow next to bug icon), and modify where the debug application will run from
+ *
+ * This project is released under public domain, do whatever with it.
+ *
+ *
+ * Mario Gonzalez
+ * http://onedayitwillmake
+ */
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Vector.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Rand.h"
-
 
 class HelloWorldApp : public ci::app::AppBasic {
 public:
@@ -21,6 +30,8 @@ void HelloWorldApp::prepareSettings( ci::app::AppBasic::Settings *settings )
 
 void HelloWorldApp::setup()
 {
+	std::cout << "Setting application path: " << getAppPath() << std::endl;
+	chdir( getAppPath().c_str( ) );
 }
 
 void HelloWorldApp::mouseDown( ci::app::MouseEvent event )
