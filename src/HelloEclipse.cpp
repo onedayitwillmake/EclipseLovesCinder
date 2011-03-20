@@ -1,6 +1,8 @@
 /**
  * EclipseLovesCinder example application
- * When debugging, if you change your project name go into debug configurations (arrow next to bug icon), and modify where the debug application will run from
+ *
+ * * On first run, run Project -> Clean...
+ * * If you change your project name go into debug configurations (arrow next to bug icon), and modify where the debug application will run from
  *
  * This project is released under public domain, do whatever with it.
  *
@@ -32,6 +34,8 @@ void HelloWorldApp::setup()
 {
 	std::cout << "Setting application path: " << getAppPath() << std::endl;
 	chdir( getAppPath().c_str( ) );
+
+	//[[NSApplication sharedApplication] activateIgnoringOtherApps:YES]
 }
 
 void HelloWorldApp::mouseDown( ci::app::MouseEvent event )
