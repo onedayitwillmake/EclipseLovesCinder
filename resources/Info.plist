@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>HelloEclipse</string>
+	<string>{$appName}</string>
 	<key>CFBundleIconFile</key>
 	<string>CinderApp.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.libcinder.HelloWorld</string>
+	<string>org.libcinder.{$appName}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>SunKist</string>
+	<string>{$appName}</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
