@@ -16,13 +16,19 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/Vector.h"
 #include "cinder/Rect.h"
+#include "cinder/Thread.h"
 #include "cinder/MayaCamUI.h"
 #include "blocks/SimpleGUI/include/SimpleGUI.h"
-
+#include "cinder/TriMesh.h"
+#include "ZoaDebugFunctions.h"
 // App
 #include "Konstants.h"
-#include "OpenNIThreadRunner.cpp"
-#include "CinderOpenNI.h"
+
+// OPEN NI
+#if __ENABLE_KINECT
+	#include <XnFPSCalculator.h>
+	#include "CinderOpenNI.h"
+#endif
 
 using namespace ci;
 using namespace ci::app;
@@ -30,45 +36,52 @@ using namespace std;
 
 //mowa::sgui::SimpleGUI *GLOBAL_GUI;
 
-class vcApp : public AppBasic
+class OpenNIHelloWorld : public AppBasic
 {
 public:
 	void	prepareSettings( Settings* settings );
 	void	setup();
 	void	setupCamera();
+	void	setupGui();
+	void 	resize( ci::app::ResizeEvent event );
+	void 	shutdown();
 	void	mouseDown( ci::app::MouseEvent event );
 	void	mouseMove( ci::app::MouseEvent event );
 	void	mouseDrag( ci::app::MouseEvent event );
 	void	mouseUp( ci::app::MouseEvent event );
-	void	setupGui();
 
 	// Update
 	void	update();
+
 	// Draw
 	void	draw();
 	void	drawKinectDepth();
 	void	drawKinectBones();
 	void	drawFPS();
+
 	// Helper functions
 	ci::Rectf	getKinectDepthArea();
 
 	// Camera
 	MayaCamUI				mMayaCam;
+	ci::TriMesh				*_floorPlane;
 
 	// GUI
 	mowa::sgui::SimpleGUI	*GUI;
-
-
-private:
-	OpenNIThreadRunner *openNIThread;
 };
 
 #define __ENABLE_USE_RECORDING
-void vcApp::prepareSettings( Settings* settings )
+void OpenNIHelloWorld::prepareSettings( Settings* settings )
 {
 	settings->setWindowSize( APP_INITIAL_WIDTH, APP_INITIAL_HEIGHT );
 }
-void vcApp::setup()
+void OpenNIHelloWorld::shutdown()
+{
+	CINDERSKELETON->shutdown();
+	AppBasic::shutdown();
+}
+
+void OpenNIHelloWorld::setup()
 {
 	// For now we have to manually change to the application path. Bug?
 	chdir( getAppPath().c_str() );
@@ -79,13 +92,14 @@ void vcApp::setup()
 
     std::cout << "CurrentWorkingDirectory is:" << cwd << std::endl;
     std::cout << "AppPath: " << this->getAppPath() << std::endl;
-	bool useRecording = true;
+	bool useRecording = false;
 
 	XnStatus nRetVal = XN_STATUS_OK;
 	CinderOpenNISkeleton *skeleton = CINDERSKELETON;
 
 	// shared setup
 	skeleton->setup( );
+
 
 	if(useRecording) {
 		nRetVal = skeleton->mContext.OpenFileRecording("/SkeletonRec.oni");
@@ -96,7 +110,7 @@ void vcApp::setup()
 		nRetVal = skeleton->mContext.FindExistingNode(XN_NODE_TYPE_PLAYER, skeleton->mPlayer);
 		CHECK_RC(nRetVal, "Find player generator", true);
 	} else {
-		skeleton->setupFromXML( "../Resources/configIR.xml" );
+		skeleton->setupFromXML( "Contents/Resources/configIR.xml" );
 	}
 
 	// Output device production nodes (user, depth, etc)
@@ -127,13 +141,16 @@ void vcApp::setup()
 	nRetVal = skeleton->mContext.StartGeneratingAll();
 	CHECK_RC(nRetVal, "StartGenerating", true);
 
-	openNIThread = new OpenNIThreadRunner();
-	openNIThread->go();
-
+	skeleton->shouldStartUpdating();
+	getFocus();
 	setupGui();
+
+	_floorPlane = new ci::TriMesh();
+	_floorPlane->clear();
+	ZoaDebugFunctions::createPlane( *_floorPlane, ci::Vec3f(0, -15, 0), 4000.0f, 4000.0f, 8, 8, 40 );
 }
 
-void vcApp::setupGui()
+void OpenNIHelloWorld::setupGui()
 {
 	//	Ranges
 	float	cameraRange = 10000;
@@ -154,7 +171,7 @@ void vcApp::setupGui()
 //	GUI->addSeparator();
 
 	//	CINDERSKELETON->setupGUI();
-	float tRange = 4000;		// Range of translate calls
+	float tRange = 8000;		// Range of translate calls
 
 //	GUI->addColumn();		// Place in own column
 	GUI->addLabel("OpenNI");
@@ -163,19 +180,19 @@ void vcApp::setupGui()
 	GUI->addParam("translateZ", &CINDERSKELETON->worldOffset.z, -tRange, tRange, CINDERSKELETON->worldOffset.z);
 }
 
-void vcApp::setupCamera()
+void OpenNIHelloWorld::setupCamera()
 {
-	// Camera perspective propertie
-	float cameraFOV			= 65.0f;
+	// Camera perspective properties
+	float cameraFOV			= 60.0f;
 	float cameraNear		= 1.0f;
-	float cameraFar			= 50000000.0f;
+	float cameraFar			= FLT_MAX;
 
+	ci::Vec3f p = ci::Vec3f::one() * 2000.0f;// Start off this far away from the center
+	ci::CameraPersp cam = ci::CameraPersp( getWindowWidth(), getWindowHeight(), cameraFOV );
 
-	Vec3f p = Vec3f::one() * 2000.0f;// Start off this far away from the center
-	CameraPersp cam = CameraPersp( getWindowWidth(), getWindowHeight(), cameraFOV );
 	cam.setWorldUp( ci::Vec3f(0, 1, 0) );
-	cam.setEyePoint( ci::Vec3f(0, 0, 1000 ) );
-	cam.setCenterOfInterestPoint( Vec3f::zero() );
+	cam.setEyePoint( ci::Vec3f(0, 0, 0 ) );
+	cam.setCenterOfInterestPoint( ci::Vec3f::zero() );
 	cam.setPerspective( cameraFOV, getWindowAspectRatio(), cameraNear, cameraFar );
 	cam.setViewDirection( ci::Vec3f(0, 0, 1 ) );
 
@@ -183,52 +200,51 @@ void vcApp::setupCamera()
 	mMayaCam.setCurrentCam( cam );
 }
 
-void vcApp::mouseDown( ci::app::MouseEvent event )
+void OpenNIHelloWorld::mouseDown( ci::app::MouseEvent event )
 {
+//	CINDERSKELETON->shouldStartUpdating();
+
 	mMayaCam.mouseDown( event.getPos() );
 }
 
-void vcApp::mouseDrag( ci::app::MouseEvent event )
+void OpenNIHelloWorld::resize( ci::app::ResizeEvent event )
+{
+	ci::CameraPersp cam = mMayaCam.getCamera();
+	cam.setPerspective( 60,  event.getAspectRatio(), 1, 6500);
+	mMayaCam.setCurrentCam( cam );
+}
+
+void OpenNIHelloWorld::mouseDrag( ci::app::MouseEvent event )
 {
 //	std::cout << event.isMetaDown() << std::endl;
 	mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMetaDown(), event.isRightDown() );
 }
 
-void vcApp::mouseMove( ci::app::MouseEvent event )
+void OpenNIHelloWorld::mouseMove( ci::app::MouseEvent event )
 {
 
 }
 
-void vcApp::mouseUp( ci::app::MouseEvent event )
+void OpenNIHelloWorld::mouseUp( ci::app::MouseEvent event )
 {
 	mMayaCam.mouseDown( event.getPos() );
 }
 
 
-void vcApp::update()
+void OpenNIHelloWorld::update()
 {
-	CinderOpenNISkeleton *skeleton = CINDERSKELETON;
-	XnStatus nRetVal = XN_STATUS_OK;
-	xnFPSMarkFrame(&skeleton->xnFPS);
 
-	static bool firstRun = true;
-	if(firstRun) { // Try to seek
-//		seekToFrame( 105 );  // Jump to right before hands go up
-		firstRun = false;
-	}
-
-	skeleton->update();
 }
 
-void vcApp::drawFPS()
+void OpenNIHelloWorld::drawFPS()
 {
 	std::stringstream myString(stringstream::in | stringstream::out);
-	double fpsValue = xnFPSCalc(&CINDERSKELETON->xnFPS);
-	myString << std::setprecision( 3 ) << fpsValue;
+	myString << std::setprecision( 3 ) << getAverageFps();
 
 	ci::Vec2f position = ci::Vec2f( 10, getWindowSize().y - 15);
 	float	rectGray = 0.05f;
 	float	fontGray = 0.75f;
+
 
 	gl::color( Color( rectGray, rectGray, rectGray) );
 	gl::drawSolidRect( ci::Rectf( 0, position.y-5, 50, position.y+20 ) );
@@ -239,13 +255,13 @@ void vcApp::drawFPS()
 
 
 
-void vcApp::draw()
+void OpenNIHelloWorld::draw()
 {
 	// Clear window
-	gl::clear( Color( 0, 0, 0 ), true );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	// clear out the window with black
+	ci::gl::clear( ci::Color( 0, 0, 0 ), true );
 
-	// Draw2D
+//	// Draw2D
 	gl::pushMatrices();
 	gl::setMatricesWindow( getWindowSize() );
 	// Disable depth buffer
@@ -259,18 +275,19 @@ void vcApp::draw()
 	drawFPS();
 
 	// Reset alpha blending and enable the depth buffer then draw3D components
-	gl::disableAlphaBlending();
+	gl::enableAlphaBlending();
 	gl::enableDepthRead();
 	gl::enableDepthWrite();
 	gl::popMatrices();
 
+	ci::gl::setMatrices( mMayaCam.getCamera() );
+
+
 	// Reset color
-	gl::color(ColorA(1,1,1,1));
+	ci::gl::color(ColorA(1,1,1,1));
 
 	// Set the camera
 	gl::setMatrices( mMayaCam.getCamera() );
-
-	gl::color(ColorA(1,1,1,1));
 
 	CinderOpenNISkeleton *skeleton = CINDERSKELETON;
 	skeleton->debugDrawSkeleton( Font( "Arial", 18 ), getKinectDepthArea() );
@@ -278,10 +295,12 @@ void vcApp::draw()
 	// Draw a cube at the origin as a visual anchor
 	gl::drawStrokedCube( ci::Vec3f::zero(), ci::Vec3f( 10.0f, 10.0f, 10.0f ) );
 
+	ci::gl::color(ColorA(1,1,1,1));
+	ci::gl::draw( *_floorPlane );
 	GUI->draw();
 }
 
-void vcApp::drawKinectDepth()
+void OpenNIHelloWorld::drawKinectDepth()
 {
 	CinderOpenNISkeleton *skeleton = CINDERSKELETON;
 
@@ -301,9 +320,10 @@ void vcApp::drawKinectDepth()
 	skeleton->debugDrawLabels( Font( "Arial", 10 ), depthArea );
 }
 
+
 // Returns the area where the kinect depth map is drawn
 // This is used when drawing labels, to draw the labels at the relative location by scaling, then translating the values returned by the kinect
-ci::Rectf vcApp::getKinectDepthArea()
+ci::Rectf OpenNIHelloWorld::getKinectDepthArea()
 {
 	int width = 160;
     int height = 120;
@@ -315,4 +335,4 @@ ci::Rectf vcApp::getKinectDepthArea()
 }
 
 #pragma mark Debug
-CINDER_APP_BASIC( vcApp, RendererGl )
+CINDER_APP_BASIC( OpenNIHelloWorld, RendererGl )

@@ -1,60 +1,10 @@
-/*
- __  .__              ________
- ______ ____   _____/  |_|__| ____   ____/   __   \
- /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
- \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    /
- /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
- \/     \/     \/                    \/
-
- THE GHOST IN THE CSH
-
-
- CinderOpenNI.h | Part of PhantomLimb | Created 18/01/2011
-
- Copyright (c) 2010 Benjamin Blundell, www.section9.co.uk
- *** Section9 ***
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Section9 nor the names of its contributors
- *       may be used to endorse or promote products derived from this software
- *       without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ***********************************************************************/
-
-/**
-  ####  #####  ##### ####    ###  #   # ###### ###### ##     ##  #####  #     #      ########    ##    #  #  #####
- #   # #   #  ###   #   #  #####  ###    ##     ##   ##  #  ##    #    #     #     #   ##   #  #####  ###   ###
- ###  #   #  ##### ####   #   #   #   ######   ##   #########  #####  ##### ##### #   ##   #  #   #  #   # #####
- --
- Mario Gonzalez
- CinderOpenNIBarebones - https://github.com/onedayitwillmake/CinderOpenNIBarebones/blob/master/CinderOpenNI.cpp
- */
 #include "CinderOpenNI.h"
 #include <sstream>
 
 XnFloat Colors[][3] =
 {
-	{0,0,1},
-	{0,0.5,1},
+	{0, 0, 1},
+	{1, 0.3,0.2},
 	{0,1,0},
 	{1,1,0},
 	{1,0,0},
@@ -78,16 +28,20 @@ unsigned int getClosestPowerOfTwo(unsigned int n)
 
 #pragma mark Singleton
 CinderOpenNISkeleton* CinderOpenNISkeleton::gCinderOpenNISkeleton = NULL;
-
-CinderOpenNISkeleton* CinderOpenNISkeleton::getInstance(){
+CinderOpenNISkeleton* CinderOpenNISkeleton::getInstance() {
 	if (!gCinderOpenNISkeleton){
 		gCinderOpenNISkeleton = new CinderOpenNISkeleton();
 	}
 	return gCinderOpenNISkeleton;
 }
+void CinderOpenNISkeleton::shutdown(){
+	gCinderOpenNISkeleton->mContext.Shutdown();
+	gCinderOpenNISkeleton = NULL;
+}
 
 #pragma mark CinderOpenNISkeleton
 CinderOpenNISkeleton::CinderOpenNISkeleton() {
+	_slot = 0;
 	mNeedPose = FALSE;
 	//gCinderOpenNISkeleton->mStrPose[20];
 	pDepthTexBuf = NULL;
@@ -96,19 +50,73 @@ CinderOpenNISkeleton::CinderOpenNISkeleton() {
 	maxUsers = 15;
 }
 
-void CinderOpenNISkeleton::shutDown() {
-	mContext.Shutdown();
+CinderOpenNISkeleton::~CinderOpenNISkeleton() {
+	app::console() << "Shutting down!" << std::endl;
+	shouldStopUpdating();
+	gCinderOpenNISkeleton->mContext.Shutdown();
+}
+
+
+// Start the thread
+void CinderOpenNISkeleton::shouldStartUpdating()
+{
+	assert(!_thread);
+
+	_thread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&CinderOpenNISkeleton::update, this)));
 }
 
 void CinderOpenNISkeleton::update()
 {
-	if( !mUserGenerator ) {
-		std::cout << "No user generator" << std::endl;
-		return;
-	}
+	int iteration = 0;
 
-	maxUsers = 15;
-	mUserGenerator.GetUsers(currentUsers, maxUsers);
+	while (!_stopRequested)
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		// nRetVal = skeleton->mContext.WaitOneUpdateAll( skeleton->mDepthGenerator );
+		nRetVal = mContext.WaitAndUpdateAll();
+
+		if( nRetVal != XN_STATUS_OK ) { // Update
+			printf("WaitAndUpdateAll failed: %s\n", xnGetStatusString(nRetVal));
+			continue;
+		}
+		if( !mUserGenerator ) { // User gen
+			std::cout << "No user generator" << std::endl;
+			return;
+		}
+
+		// Get depthgenerator
+		nRetVal = mContext.FindExistingNode(XN_NODE_TYPE_DEPTH, mDepthGenerator);
+		if( nRetVal != XN_STATUS_OK ) {
+			printf("FindExistingNode failed: %s\n", xnGetStatusString(nRetVal));
+			continue;
+		}
+
+		// Cannot retrieve FPS or depthGenerator
+		if(!&xnFPS) {
+			std::cout << "(Oneday) OpenNIThreadRunner Not ready!" << std::endl;
+			continue;
+		}
+
+		// All clear - update
+		maxUsers = 15;
+		mUserGenerator.GetUsers(currentUsers, maxUsers);
+		mDepthGenerator.GetMetaData( mDepthMD );
+		mUserGenerator.GetUserPixels(0, mSceneMD);
+		setDepthSurface();
+
+
+		++iteration;
+	}
+}
+
+// Stop the thread
+void CinderOpenNISkeleton::shouldStopUpdating()
+{
+	assert(_thread);
+
+	_stopRequested = true;
+	_thread->join();
 }
 
 // Barebones setup
@@ -141,11 +149,11 @@ void CinderOpenNISkeleton::setupGUI()
 //#ifdef USE_SIMPLE_GUI
 //	float tRange = 4000;		// Range of translate calls
 //
-//	SIMPLEGUI->addColumn();		// Place in own column
-//	SIMPLEGUI->addLabel("OpenNI");
-//	SIMPLEGUI->addParam("translateX", &gCinderOpenNISkeleton->worldOffset.x, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.x);
-//	SIMPLEGUI->addParam("translateY", &gCinderOpenNISkeleton->worldOffset.y, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.y);
-//	SIMPLEGUI->addParam("translateZ", &gCinderOpenNISkeleton->worldOffset.z, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.z);
+//	GLOBAL_GUI->addColumn();		// Place in own column
+//	GLOBAL_GUI->addLabel("OpenNI");
+//	GLOBAL_GUI->addParam("translateX", &gCinderOpenNISkeleton->worldOffset.x, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.x);
+//	GLOBAL_GUI->addParam("translateY", &gCinderOpenNISkeleton->worldOffset.y, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.y);
+//	GLOBAL_GUI->addParam("translateZ", &gCinderOpenNISkeleton->worldOffset.z, -tRange, tRange, gCinderOpenNISkeleton->worldOffset.z);
 //#endif
 }
 
@@ -209,17 +217,21 @@ bool CinderOpenNISkeleton::setupFromXML(string path)
 	return true;
 }
 
+#define GESTURE_TO_USE "Click"
 XnStatus CinderOpenNISkeleton::setupCallbacks()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	// USER CALLBACKS
 	XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
 	nRetVal = gCinderOpenNISkeleton->mUserGenerator.RegisterUserCallbacks(CinderOpenNISkeleton::User_NewUser, User_LostUser, NULL, hUserCallbacks);
 	CHECK_RC(nRetVal, "RegisterUserCallbacks", true);
 
+	// CALLABERATION CALLBACKS
 	nRetVal = gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, hCalibrationCallbacks);
 	CHECK_RC(nRetVal, "RegisterCalibrationCallbacks", true);
 
+	// POSE CALLBACKS
 	if (gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().NeedPoseForCalibration())
 	{
 		gCinderOpenNISkeleton->mNeedPose = TRUE;
@@ -236,7 +248,6 @@ XnStatus CinderOpenNISkeleton::setupCallbacks()
 
 	gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
 
-
 	return nRetVal;
 }
 
@@ -246,9 +257,19 @@ XnStatus CinderOpenNISkeleton::setupCallbacks()
 void XN_CALLBACK_TYPE CinderOpenNISkeleton::User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	app::console() <<  "(ONEDAY)::OpenNICallback::User_NewUser: " << nId << endl;
+
+	if( gCinderOpenNISkeleton->_isFirstCalibrationComplete
+			&& gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().IsCalibrationData( gCinderOpenNISkeleton->_slot) ) {
+
+		app::console() <<  "(ONEDAY)::OpenNICallback::User_NewUser - REUSING TRACKING!!: " << nId << endl;
+		gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().LoadCalibrationData( nId, gCinderOpenNISkeleton->_slot );
+		gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().StartTracking( nId );
+
+		return;
+	}
+
 	// New user found
-	if (gCinderOpenNISkeleton->mNeedPose)
-	{
+	if (gCinderOpenNISkeleton->mNeedPose) {
 		gCinderOpenNISkeleton->mUserGenerator.GetPoseDetectionCap().StartPoseDetection(gCinderOpenNISkeleton->mStrPose, nId);
 	}
 	else
@@ -285,8 +306,15 @@ void XN_CALLBACK_TYPE CinderOpenNISkeleton::UserCalibration_CalibrationEnd(xn::S
 	{
 		// Calibration succeeded
 
-		app::console() <<  "(ONEDAY)::OpenNICallback::UserCalibration_CalibrationEnd: " <<  nId <<endl;
+		if( !gCinderOpenNISkeleton->_isFirstCalibrationComplete ) {
+			gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().SaveCalibrationData( nId, gCinderOpenNISkeleton->_slot );
+			gCinderOpenNISkeleton->_isFirstCalibrationComplete = true;
+		}
+
+		app::console() <<  "(ONEDAY)::OpenNICallback::UserCalibration_CalibrationEnd: " <<  nId << std::endl;
+		float mSkeletonSmoothing = 0.5f;
 		gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().StartTracking(nId);
+		gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().SetSmoothing( mSkeletonSmoothing );
 	}
 	else
 	{
@@ -301,7 +329,6 @@ void XN_CALLBACK_TYPE CinderOpenNISkeleton::UserCalibration_CalibrationEnd(xn::S
 		}
 	}
 }
-
 
 #pragma mark Accessors
 void CinderOpenNISkeleton::setDimensions( ci::Vec2i aDimensions ) {
@@ -406,18 +433,11 @@ void CinderOpenNISkeleton::setDepthSurface()
 					iter.g() = nHistValue * Colors[nColorID][1];
 					iter.b() = nHistValue * Colors[nColorID][2];
 				}
-
-				// app::console() << "PLABEL with Colour: " << label % nColors << endl;
 			}
 			else {
 				nValue = *pDepth;
-				//app::console() << "nValue: " << nValue << endl;
-				if (nValue != 0)
-				{
+				if (nValue != 0) {
 					nHistValue = gCinderOpenNISkeleton->pDepthHist[nValue];
-
-					//app::console() << "nHistValue: " << nHistValue << endl;
-
 					iter.r() = nHistValue;
 					iter.g() = nHistValue;
 					iter.b() = nHistValue;
@@ -583,27 +603,6 @@ void CinderOpenNISkeleton::debugDrawSkeleton(Font font, ci::Rectf depthArea)
 
 
 			glEnd();
-
-
-			ci::Vec3f size = ci::Vec3f::one() * 10;
-			ci::Vec3f center = ci::Vec3f::zero();
-			Vec3f min = center - size * 0.5f;
-			Vec3f max = center + size * 0.5f;
-
-			gl::drawLine( Vec3f(min.x, min.y, min.z), Vec3f(max.x, min.y, min.z) );
-			gl::drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, max.y, min.z) );
-			gl::drawLine( Vec3f(max.x, max.y, min.z), Vec3f(min.x, max.y, min.z) );
-			gl::drawLine( Vec3f(min.x, max.y, min.z), Vec3f(min.x, min.y, min.z) );
-
-			gl::drawLine( Vec3f(min.x, min.y, max.z), Vec3f(max.x, min.y, max.z) );
-			gl::drawLine( Vec3f(max.x, min.y, max.z), Vec3f(max.x, max.y, max.z) );
-			gl::drawLine( Vec3f(max.x, max.y, max.z), Vec3f(min.x, max.y, max.z) );
-			gl::drawLine( Vec3f(min.x, max.y, max.z), Vec3f(min.x, min.y, max.z) );
-
-			gl::drawLine( Vec3f(min.x, min.y, min.z), Vec3f(min.x, min.y, max.z) );
-			gl::drawLine( Vec3f(min.x, max.y, min.z), Vec3f(min.x, max.y, max.z) );
-			gl::drawLine( Vec3f(max.x, max.y, min.z), Vec3f(max.x, max.y, max.z) );
-			gl::drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, min.y, max.z) );
 		}
 	}
 
@@ -614,11 +613,6 @@ ci::Vec3f CinderOpenNISkeleton::getUserJointRealWorld( XnUserID playerID, XnSkel
 {
 	if (!gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().IsTracking(playerID))
 	{
-		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
-		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
-		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
-		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
-		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
 		app::console() << "(Oneday)::getUserJointRealWorld - Not Tracked!" << std::endl;
 		return ci::Vec3f::zero();
 	}
@@ -705,8 +699,8 @@ void CinderOpenNISkeleton::drawLimbDebug(XnUserID player, XnSkeletonJoint eJoint
 	gCinderOpenNISkeleton->mUserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, eJoint2, joint2);
 
 	// Not sure of joint confidence, just draw previous?
-//	if (joint1.fConfidence < gCinderOpenNISkeleton->mJointConfidence || joint2.fConfidence < gCinderOpenNISkeleton->mJointConfidence)
-//			return;
+	if (joint1.fConfidence < gCinderOpenNISkeleton->mJointConfidence || joint2.fConfidence < gCinderOpenNISkeleton->mJointConfidence)
+			return;
 
 	// Retreive points
 	XnPoint3D pt[2];
@@ -725,8 +719,8 @@ void CinderOpenNISkeleton::drawLimbDebug(XnUserID player, XnSkeletonJoint eJoint
 	// Apply scale based on window size, vs dimensions of depth image ( will be 320 or 640 )
 	ci::Vec2i windowSize = ci::app::App::get()->getWindowSize();	// Dimensions of the application window
 	ci::Vec2i inputSize = getDimensions();	// Dimensions of our image
-	ci::Vec3f scale = ci::Vec3f( windowSize.x / inputSize.x, windowSize.y / inputSize.y, 0.5f );
-//	scale = ci::Vec3f(-1,1,1);
+	ci::Vec3f scale = ci::Vec3f( windowSize.x / inputSize.x, windowSize.y / inputSize.y, 1.0f );
+//	scale = ci::Vec3f(0.2, -0.2,0.2);
 
 	// Draw
 	glVertex3i(pt[0].X * scale.x, pt[0].Y * scale.y, pt[0].Z * scale.z);

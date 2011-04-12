@@ -8,6 +8,7 @@ import time
 import shutil
 
 argumentDictionary = {}
+defaultApplicationName = "{$appName}"
 
 # Loop thru args
 for arg in sys.argv:
@@ -36,6 +37,16 @@ for subdir, dirs, files in os.walk(resourcesDir):
       originalFileModifiedAt = os.path.getmtime( resourcesDir + file ); # original file modified time
       shouldCopy = 0
       
+      # It's the info.plist file - replace all occurences to HelloEclipse.app to match appName
+      if file =="Info.plist":
+      	f = open(resourcesDir + file, 'r')
+      	lines = f.read()
+      	f.close()
+      	# Write to file
+      	newFile = open(resourcesDir + "~Info.plist", 'w')
+      	newFile.write(lines.replace(defaultApplicationName, argumentDictionary['appName']))
+      	newFile.close()
+      	
       # If the file exist, and it's modified time is newer - or it doesn't exist at all - copy it
       if os.path.exists(appBundleResources+file):  # Does exist, compare times
             if originalFileModifiedAt > os.path.getmtime( appBundleResources + file ):
@@ -50,9 +61,11 @@ for subdir, dirs, files in os.walk(resourcesDir):
         print "Ignoring file: '" + file + "' (existing version has same timestamp) ..."
 ####################### END COPY RESOURCES IF NEWER
 
-# Copy Info.plist file
-if os.path.exists(appBundleResources+"Info.plist"):  # Copy info.plist file to AppBundle/MacOS directory
-  shutil.copy( resourcesDir + "Info.plist", appBundle + "/Contents/Info.plist" )
+# Copy modified Info.plist file
+if os.path.exists(resourcesDir +"~Info.plist"):  # Copy info.plist file to AppBundle/MacOS directory
+  shutil.copy( resourcesDir + "~Info.plist", appBundle + "/Contents/Info.plist" )
+  os.remove(resourcesDir + "~Info.plist")
+  # Delete ~Info.plist to avoid confusion
 else:
   print "!! (EclipseLovesCinder): Warning - No Info.plist file exist in resources directory!"
   
