@@ -15,6 +15,7 @@
 #include "cinder/Vector.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Rand.h"
+#include "gl.h"
 
 class HelloWorldApp : public ci::app::AppBasic {
 public:
