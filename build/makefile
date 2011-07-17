@@ -55,7 +55,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-python ../tools/postinstall.py -appName=HelloEclipse --cwd=/Users/onedayitwillmake/GIT/EclipseCinder/build;
+	-python ../tools/postinstall.py -appName=HelloEclipse --cwd=/Users/onedayitwillmake/GIT/MeshAttempt/build;
 	-@echo ' '
 
 .PHONY: all clean dependents
