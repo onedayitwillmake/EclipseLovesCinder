@@ -16,7 +16,7 @@ for arg in sys.argv:
     argumentDictionary[arg.split("=")[0].lstrip("--")] =  arg.split("=")[1] # insert into args dictionary
 
 # Generate empty app bundle  directory
-appBundle = argumentDictionary['cwd'] + "/../bin/" + argumentDictionary['appName'] + ".app"
+appBundle = argumentDictionary['cwd'] + "/" + argumentDictionary['appName'] + ".app"
 if not os.path.exists(appBundle):
     os.makedirs(appBundle)
     
@@ -70,7 +70,7 @@ else:
   print "!! (EclipseLovesCinder): Warning - No Info.plist file exist in resources directory!"
   
 # Copy application binary
-print "Copying binary..."
-shutil.copy( argumentDictionary['cwd'] +"/"+ argumentDictionary['appName'], appBundleMacOS + "/" +argumentDictionary['appName'] )
+print "Moving binary..."
+shutil.move( argumentDictionary['cwd'] +"/"+ argumentDictionary['appName'], appBundleMacOS + "/" +argumentDictionary['appName'] )
 
 print "--- EclipseLovesCinder postbuild.py complete" 

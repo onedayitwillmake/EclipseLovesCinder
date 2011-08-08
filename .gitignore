@@ -1,0 +1,7 @@
+.DS_Store
+# Compiled Object files
+*.slo
+*.lo
+*.o
+# Debug files
+*.d

@@ -10,6 +10,8 @@
  * Mario Gonzalez
  * http://onedayitwillmake
  */
+
+
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Vector.h"
@@ -26,36 +28,29 @@ public:
 	void draw();
 };
 
-void HelloWorldApp::prepareSettings( ci::app::AppBasic::Settings *settings )
-{
+void HelloWorldApp::prepareSettings( ci::app::AppBasic::Settings *settings ) {
 	settings->setWindowSize( 800, 600 );
 }
 
-void HelloWorldApp::setup()
-{
+void HelloWorldApp::setup() {
 	std::cout << "Setting application path: " << getAppPath() << std::endl;
 	chdir( getAppPath().c_str( ) );
-
-	//[[NSApplication sharedApplication] activateIgnoringOtherApps:YES]
 }
 
-void HelloWorldApp::mouseDown( ci::app::MouseEvent event )
-{
+void HelloWorldApp::mouseDown( ci::app::MouseEvent event ) {
 }
 
-void HelloWorldApp::update()
-{
-}
+void HelloWorldApp::update() {
 
-void HelloWorldApp::draw()
-{
+}
+void HelloWorldApp::draw() {
 	// clear out the window with black
 	ci::Color aColor = ci::Color( 0, 0, 0 );
 	aColor.r = fabs( cosf(getElapsedFrames() * 0.008) );
 	aColor.g = fabs( sinf(getElapsedFrames() * 0.01) );
 	aColor.b = (float) getMousePos().x / getWindowWidth();
 
-	ci::gl::clear( aColor );
+	ci::gl::clear( ci::Color( 0, 0, 0 ) );
 
 	ci::gl::color( ci::Color(aColor * 0.5) );
 	ci::gl::drawLine( ci::Vec2f(getMousePos()), ci::Vec2f( getWindowCenter() ) );
