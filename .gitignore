@@ -5,3 +5,5 @@
 *.o
 # Debug files
 *.d
+Release/
+Debug/
