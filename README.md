@@ -30,3 +30,4 @@ From what I've used it so far, it is much better - but compile times are a littl
 
 ### Better syntax highlighting, and code sense
 ![Editor](https://github.com/onedayitwillmake/EclipseLovesCinder/raw/Opennibarebones/docs/github/screenshot_editor.png "Title")
+ 
