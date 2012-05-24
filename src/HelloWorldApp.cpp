@@ -6,6 +6,7 @@
  ********************* IMPORTANT **************************
  * On first run:
  * 	- Select Project -> Clean...
+ * 	- Then press the 'bug' icon to build. When asked select the top option of the three GDB debugger types
  **********************************************************
  **********************************************************
  *
