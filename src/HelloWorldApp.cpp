@@ -6,12 +6,6 @@
  ********************* IMPORTANT **************************
  * On first run:
  * 	- Select Project -> Clean...
- *
- *  - If change the project name, you have to tell the debugger where the new one is:
- *  	Go into Run -> Debug Configurations
- *  	Set where the application lives to something like this
- *  	Debug/{APPNAME}/Contents/MacOS/{APPNAME}
- *
  **********************************************************
  **********************************************************
  *
@@ -30,16 +24,22 @@
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Rand.h"
 #include "Resources.h"
-#include "gl.h"
 
 class HelloWorldApp : public ci::app::AppBasic {
 public:
 	void setup();
 	void prepareSettings( ci::app::AppBasic::Settings *settings );
-	void mouseDown( ci::app::MouseEvent event );
 	void update();
 	void draw();
 	void shutdown();
+
+	void mouseDown( ci::app::MouseEvent event );
+	void mouseMove( ci::app::MouseEvent event );
+	void mouseDrag( ci::app::MouseEvent event );
+	void mouseUp( ci::app::MouseEvent event );
+	void resize( ci::app::ResizeEvent event );
+
+	void keyDown( ci::app::KeyEvent event );
 
 	ci::gl::Texture texture;
 };
@@ -49,32 +49,67 @@ void HelloWorldApp::prepareSettings( ci::app::AppBasic::Settings *settings ) {
 }
 
 void HelloWorldApp::setup() {
-	std::cout << "Setting application path: " << getAppPath() << std::endl;
-	chdir( getAppPath().c_str( ) );
+	// Hack to force our app window to show up above other windows on debug launch
+	setAlwaysOnTop( true );
 
-	// Test loading a texture
-	texture = ci::gl::Texture( ci::loadImage( ci::app::App::get()->loadResource( RES_WHEEL ) ) );
+	// Test loading an image
+	std::string path = ci::app::App::get()->getResourcePath().string() + "/" + "wheel.png";
+	texture = ci::gl::Texture( ci::loadImage( path ) );
 }
+
 
 void HelloWorldApp::mouseDown( ci::app::MouseEvent event ) {
 }
 
-void HelloWorldApp::update() {
-
+void HelloWorldApp::mouseDrag( ci::app::MouseEvent event ) {
 }
+
+void HelloWorldApp::mouseMove( ci::app::MouseEvent event ) {
+}
+
+void HelloWorldApp::mouseUp( ci::app::MouseEvent event ) {
+}
+
+void HelloWorldApp::resize( ci::app::ResizeEvent event ) {
+	ci::gl::setMatricesWindow( event.getSize() );
+}
+
+void HelloWorldApp::keyDown( ci::app::KeyEvent event ) {
+	if( event.getChar() == ci::app::KeyEvent::KEY_q )
+		quit();
+}
+
+// All logic updates here
+// Called every frame
+void HelloWorldApp::update() {
+	// This is a work hacky work around, to force our application to be above other windows when launched
+	static bool hasBecomeFirstResponder = false;
+	if( !hasBecomeFirstResponder && getElapsedSeconds() > 2 ) { // After 2 seconds, resume normal behavior
+		hasBecomeFirstResponder = true;
+		setAlwaysOnTop( false );
+	}
+}
+
+// Only drawing here, do not place logic during drawing or it will slow down OpenGL
+// Called every frame
 void HelloWorldApp::draw() {
-	// clear out the window with black
+
+	// Clear screen every frame with black
+	ci::gl::clear( ci::Color( 0, 0, 0 ) );
+
+	// Create a random color based on the number of frames passed
 	ci::Color aColor = ci::Color( 0, 0, 0 );
 	aColor.r = fabs( cosf(getElapsedFrames() * 0.008) );
 	aColor.g = fabs( sinf(getElapsedFrames() * 0.01) );
 	aColor.b = (float) getMousePos().x / getWindowWidth();
 
-	ci::gl::clear( ci::Color( 0, 0, 0 ) );
-
-	ci::gl::color( ci::Color(aColor * 0.5) );
+	// Set the color and draw a simple line to the mouse
+	ci::gl::color( aColor );
 	ci::gl::drawLine( ci::Vec2f(getMousePos()), ci::Vec2f( getWindowCenter() ) );
 
 
+	// Test drawing a texture...
+	// Always check if texture loaded before drawing to avoid race condition on app start
 	if ( texture ) {
 		ci::gl::color( ci::ColorA(1.0f, 1.0f, 1.0f, 1.0f) );
 		ci::gl::draw( texture, getWindowCenter() );
@@ -82,9 +117,10 @@ void HelloWorldApp::draw() {
 
 }
 
-
 void HelloWorldApp::shutdown() {
 	std::cout << "Shutdown..." << std::endl;
 	AppBasic::shutdown();
 }
+
+
 CINDER_APP_BASIC( HelloWorldApp, ci::app::RendererGl )
