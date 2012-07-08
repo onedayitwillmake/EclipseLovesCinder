@@ -20,6 +20,9 @@ From what I've used it so far, it is much better - but compile times are a littl
    3. Replace **'/Users/onedayitwillmake/GIT/LIBRARY/Cinder/'** with your own **cinder path**
 6. After hitting, apply/ok and closing that window select Project->Build All and project should build successfully.
 
+## Alternative Instructions with pictures 
+http://onedayitwillmake.com/blog/2012/05/using-eclipselovescinder-template/  
+
 
 ## Screenshots
 ### Debugger / Hitting a breakpoint
