@@ -15,8 +15,8 @@ From what I've used it so far, it is much better - but compile times are a littl
 2. Download this project
 3. Import into eclipse workspace (select import existing project in the 'general' drop down)  
 4. In terminal browse to directory where you downloaded the project
-   1. enter: *"ln -s abc123 CINDER_PATH_LINK*"
-   1. Where *abc123* is the absolute path where you placed cinder
+   1. enter: **"ln -s abc123 CINDER_PATH_LINK**"
+   1. Where **abc123** is the absolute path where you placed cinder
 6. After hitting, apply/ok and closing that window select Project->Build All and project should build successfully.
 
 ## Alternative Instructions with pictures 
